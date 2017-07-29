@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.krz.android_opengl_t0.MainActivity">
+
+    <view
+        android:id="@+id/myGLView"
+        class="com.example.krz.android_opengl_t0.MyGLSurfaceView"
+        id="@+id/view6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/debugText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="74dp"
+        android:layout_marginTop="16dp"
+        android:text="TextView"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/debugText2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="74dp"
+        android:text="TextView"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:background="#6400003c"
+        android:onClick="changeBGColor"
+        android:text="Butt"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <view
+        android:id="@+id/mJoystick"
+        class="com.example.krz.android_opengl_t0.MyJoystick"
+        id="@+id/view8"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="148dp"
+        android:background="#7848009b"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</android.support.constraint.ConstraintLayout>
