@@ -1,7 +1,7 @@
 package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 
 public class Cylinder extends GameObject {
 
@@ -98,38 +98,61 @@ public class Cylinder extends GameObject {
             normals[i * sideVertAmount + 9 * 3 + 8] = -1;
         }
 
+        instance = new int[sides * sideVertAmount / 3];
+        for (int i = 0; i < sides * sideVertAmount / 3; i++) {
+            instance[i] = 5;
+        }
 
         init("vert_cylinder.glsl", "frag_cylinder.glsl");
 
 
     }
 
+    public void setInst(int ins) {
+        for (int i = 0; i < instance.length; i++) {
+            instance[i] = ins;
+        }
+    }
+
     public void draw(float[] mvpMatrix) {
         // Add program to OpenGL ES environment
-        GLES20.glUseProgram(mProgram);
+        GLES30.glUseProgram(mProgram);
 
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GLES30.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
 
-        GLES20.glEnableVertexAttribArray(mPositionHandle);
-        GLES20.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
-                GLES20.GL_FLOAT, false,
-                vertexStride, vertexBuffer);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[0]);
+        GLES30.glEnableVertexAttribArray(mPositionHandle);
+        GLES30.glVertexAttribPointer(mPositionHandle, COORDS_PER_VERTEX,
+                GLES30.GL_FLOAT, false,
+//                vertexStride, vertexBuffer);
+                vertexStride, 0);
 
-        GLES20.glEnableVertexAttribArray(mNormHandle);
-        GLES20.glVertexAttribPointer(mNormHandle, COORDS_PER_VERTEX,
-                GLES20.GL_FLOAT, false,
-                vertexStride, normalBuffer);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[1]);
+        GLES30.glEnableVertexAttribArray(mNormHandle);
+        GLES30.glVertexAttribPointer(mNormHandle, COORDS_PER_VERTEX,
+                GLES30.GL_FLOAT, false,
+//                vertexStride, normalBuffer);
+                vertexStride, 0);
 
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
+        GLES30.glEnableVertexAttribArray(mInstHandle);
+        GLES30.glVertexAttribPointer(mInstHandle, 1,
+                GLES30.GL_INT, false,
+//                vertexStride, normalBuffer);
+                1*4, 0);
+
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
         float[] color = {1.0f, 0.0f, 0.0f, 1.0f};
 
-        GLES20.glUniform4fv(mColorHandle, 1, color, 0);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
-//        GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
 
-        
+        GLES30.glUniform4fv(mColorHandle, 1, color, 0);
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, vertexCount);
+//        GLES30.glDrawElements(GLES30.GL_TRIANGLES, drawOrder.length, GLES30.GL_UNSIGNED_SHORT, drawListBuffer);
 
-        GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glDisableVertexAttribArray(mNormHandle);
+
+        GLES30.glDisableVertexAttribArray(mPositionHandle);
+        GLES30.glDisableVertexAttribArray(mNormHandle);
+        GLES30.glDisableVertexAttribArray(mInstHandle);
 
     }
 }

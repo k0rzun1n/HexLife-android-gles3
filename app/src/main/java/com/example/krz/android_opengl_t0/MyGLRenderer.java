@@ -2,7 +2,7 @@ package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.Matrix;
@@ -13,18 +13,24 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+//import android.opengl.GLES30Ext;
+
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
-    private Square mSquare;
+    private Quad mQuad;
     private Cylinder mCyl;
     private Context mContext;
     public float[] mClearColor;
     float[] mEye;
     float[] mEyeRotation; //zy
+    int[] frameBufs;
+    int[] rendTex;
 
     private HexLifeGame hlg = new HexLifeGame();
 
@@ -61,10 +67,27 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mEye = new float[]{-6.0f, 0.0f, 3.0f};
         mEyeRotation = new float[]{0.0f, 0.0f};
         mClearColor = new float[]{0.3f, 0.0f, 0.0f, 1.0f};
-//        mSquare = new Square(mContext);
+        mQuad = new Quad(mContext);
         mCyl = new Cylinder(mContext);
-        GLES20.glClearColor(mClearColor[0], mClearColor[1], mClearColor[2], mClearColor[3]);
+        GLES30.glClearColor(mClearColor[0], mClearColor[1], mClearColor[2], mClearColor[3]);
         hlg.step();
+
+        frameBufs = new int[2];
+        GLES30.glGenFramebuffers(2, frameBufs, 0);
+
+        rendTex = new int[2];
+        GLES30.glGenTextures(2, rendTex, 0);
+
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, rendTex[0]);
+//        Buffer tex = ByteBuffer.allocateDirect(100*100*4);
+        Buffer tex = ByteBuffer.allocateDirect(1);
+        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, 100, 100, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, tex);
+
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//        GLES2
+//        GLES30.glCheckFramebufferStatus()
+//        GLES30.glFramebufferTexture2D(GLES30.GL_COLOR_ATTACHMENT0,);
 
 //        ByteBuffer bb = ByteBuffer.allocateDirect()
     }
@@ -72,17 +95,16 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private float[] mRotationMatrix = new float[16];
 
     public void onDrawFrame(GL10 gl) {
-//        GLES20.glClearColor(mClearColor[0], mClearColor[1], mClearColor[2], mClearColor[3]);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_STENCIL_BUFFER_BIT);
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT);
+        GLES30.glEnable(GLES30.GL_DEPTH_TEST);
 
-//        Log.d("GLESVER",GLES20.glGetString(GLES20.GL_SHADING_LANGUAGE_VERSION));
-//        Log.d("GLESVER",GLES20.glGetString(GLES20.GL_VERSION));
+//        Log.d("GLESVER",GLES30.glGetString(GLES30.GL_SHADING_LANGUAGE_VERSION));
+//        Log.d("GLESVER",GLES30.glGetString(GLES30.GL_VERSION));
         int[] glmax = new int[1];
-//        GLES20.glGetIntegerv(GLES20.GL_MAX_VERTEX_UNIFORM_VECTORS, glmax, 0);
-        GLES20.glGetIntegerv(GLES20.GL_VERTEX_ATTRIB_ARRAY_SIZE, glmax, 0);
+//        GLES30.glGetIntegerv(GLES30.GL_MAX_VERTEX_UNIFORM_VECTORS, glmax, 0);
+        GLES30.glGetIntegerv(GLES30.GL_VERTEX_ATTRIB_ARRAY_SIZE, glmax, 0);
         Log.d("GLESVER", Integer.toString(glmax[0]));
-        Log.d("GLESVER", GLU.gluErrorString(GLES20.glGetError()));
+        Log.d("GLESVER", GLU.gluErrorString(GLES30.glGetError()));
 
 //        Matrix.setLookAtM(mViewMatrix, 0, mEye[0], mEye[1], mEye[2], mEye[0] - 1, mEye[1] - 1, mEye[2] - 3, 0f, 0f, 1.0f);
         Matrix.setLookAtM(mViewMatrix, 0,
@@ -97,17 +119,20 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
 
         //--DRAW
-        GLES20.glEnable(GLES20.GL_STENCIL_TEST);
-//        GLES20.glStencilFunc(GLES20.GL_NEVER,1,1);
-        GLES20.glStencilFunc(GLES20.GL_ALWAYS, 1, 1);
-//        GLES20.glStencilFunc();
+        GLES30.glEnable(GLES30.GL_STENCIL_TEST);
+//        GLES30.glStencilFunc(GLES30.GL_NEVER,1,1);
+        GLES30.glStencilFunc(GLES30.GL_ALWAYS, 1, 1);
+//        GLES30.glStencilFunc();
         int[] ixx = new int[10];
-        GLES20.glGetIntegerv(GLES20.GL_STENCIL_BITS, ixx, 0);
+        GLES30.glGetIntegerv(GLES30.GL_STENCIL_BITS, ixx, 0);
         Log.d("stencbi", Integer.toString(ixx[0]));
-        mCyl.draw(mMVPMatrix);
-        Matrix.translateM(mMVPMatrix, 0, -3f, 0, 0);
-        mCyl.draw(mMVPMatrix);
-//        mSquare.draw(scratch);
+//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER,frameBufs[0]);
+//        mCyl.draw(mMVPMatrix);
+//        Matrix.translateM(mMVPMatrix, 0, -3f, 0, 0);
+//        mCyl.draw(mMVPMatrix);
+//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER,0);
+        mQuad.draw();
+//        mQuad.draw(scratch);
     }
 
     private final float[] mMVPMatrix = new float[16];
@@ -116,7 +141,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
-        GLES20.glViewport(0, 0, width, height);
+        GLES30.glViewport(0, 0, width, height);
         float ratio = (float) width / height;
 
         // this projection matrix is applied to object coordinates
@@ -141,14 +166,14 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     public static int loadShader(int type, String shaderCode) {
 
-        // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
-        // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
-        int shader = GLES20.glCreateShader(type);
+        // create a vertex shader type (GLES30.GL_VERTEX_SHADER)
+        // or a fragment shader type (GLES30.GL_FRAGMENT_SHADER)
+        int shader = GLES30.glCreateShader(type);
 
         // add the source code to the shader and compile it
-        GLES20.glShaderSource(shader, shaderCode);
-        GLES20.glCompileShader(shader);
-        Log.d("ShaderLog", GLES20.glGetShaderInfoLog(shader));
+        GLES30.glShaderSource(shader, shaderCode);
+        GLES30.glCompileShader(shader);
+        Log.d("ShaderLog", GLES30.glGetShaderInfoLog(shader));
         return shader;
     }
 

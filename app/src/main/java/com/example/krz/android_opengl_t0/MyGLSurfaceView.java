@@ -1,7 +1,7 @@
 package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -37,15 +37,15 @@ class MyGLSurfaceView extends GLSurfaceView {
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                GLES20.glClearColor(0, 0.4f, 0.2f, 1);
+                GLES30.glClearColor(0, 0.4f, 0.2f, 1);
             }
         });
         requestRender();
     }
 
     private void init(Context context) {
-        // Create an OpenGL ES 2.0 context
-        setEGLContextClientVersion(2);
+        // Create an OpenGL ES 3.0 context
+        setEGLContextClientVersion(3);
 
         mRenderer = new MyGLRenderer(context);
 

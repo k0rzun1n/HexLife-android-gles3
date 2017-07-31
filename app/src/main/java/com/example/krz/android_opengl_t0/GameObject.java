@@ -1,10 +1,11 @@
 package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
-import android.opengl.GLES20;
+import android.opengl.GLES30;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
 import static java.nio.ByteOrder.nativeOrder;
@@ -20,27 +21,29 @@ public abstract class GameObject {
     protected final int vertexStride = COORDS_PER_VERTEX * 4; // 4 bytes per vertex
     protected float[] vertices = null;
     protected float[] normals = null;
+    protected int[] instance = null;
     protected short[] drawOrder = null;// = {0, 1, 2, 0, 2, 3}; // order to draw vertices
     protected final Context mContext;
-    protected final int mProgram;
+    protected int mProgram;
     // Use to access and set the view transformation
     protected int mMVPMatrixHandle;
     protected FloatBuffer vertexBuffer;
     protected FloatBuffer normalBuffer;
+    protected IntBuffer instBuffer;
     protected ShortBuffer drawListBuffer;
     protected int mPositionHandle;
     protected int mColorHandle;
     protected int mNormHandle;
+    protected int mInstHandle;
+
+    protected int[] bufs;
 
     public GameObject(Context context) {
-
         mContext = context;
-        mProgram = GLES20.glCreateProgram();
-
-
     }
 
     protected void init(String vsFName, String fsFName) {
+
         vertexCount = vertices.length / COORDS_PER_VERTEX;
 
         // initialize vertex byte buffer for shape coordinates
@@ -60,6 +63,28 @@ public abstract class GameObject {
         normalBuffer.put(normals);
         normalBuffer.position(0);
 
+        ByteBuffer ib = ByteBuffer.allocateDirect(
+                // (# of coordinate values * 4 bytes per int)
+                normals.length * 4);
+        ib.order(nativeOrder());
+        instBuffer = ib.asIntBuffer();
+        instBuffer.put(instance);
+        instBuffer.position(0);
+
+        bufs = new int[3];
+        GLES30.glGenBuffers(3, bufs, 0);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[0]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, vertexBuffer.capacity()*4, vertexBuffer, GLES30.GL_STATIC_DRAW);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[1]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, normalBuffer.capacity()*4, normalBuffer, GLES30.GL_STATIC_DRAW);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity()*4, instBuffer, GLES30.GL_STATIC_DRAW); //todo dyndraw?
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
+        vertexBuffer = null;
+        normalBuffer = null;
+        instBuffer = null;
+        vertices = null;
+//        GLES30.glDeleteBuffers(2, bufs, 0);
         // initialize byte buffer for the draw list
 //        ByteBuffer dlb = ByteBuffer.allocateDirect(
 //                // (# of coordinate values * 2 bytes per short)
@@ -70,19 +95,21 @@ public abstract class GameObject {
 //        drawListBuffer.position(0);
 
 
-        int vertexShader = MyGLRenderer.loadShader(mContext, GLES20.GL_VERTEX_SHADER,
-                "vert_cylinder.glsl");
-        int fragmentShader = MyGLRenderer.loadShader(mContext, GLES20.GL_FRAGMENT_SHADER,
-                "frag_cylinder.glsl");
+        int vertexShader = MyGLRenderer.loadShader(mContext, GLES30.GL_VERTEX_SHADER,
+                vsFName);
+        int fragmentShader = MyGLRenderer.loadShader(mContext, GLES30.GL_FRAGMENT_SHADER,
+                fsFName);
 
-        GLES20.glAttachShader(mProgram, vertexShader);
-        GLES20.glAttachShader(mProgram, fragmentShader);
+        mProgram = GLES30.glCreateProgram();
+        GLES30.glAttachShader(mProgram, vertexShader);
+        GLES30.glAttachShader(mProgram, fragmentShader);
         // creates OpenGL ES program executables
-        GLES20.glLinkProgram(mProgram);
+        GLES30.glLinkProgram(mProgram);
 
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
-        mNormHandle = GLES20.glGetAttribLocation(mProgram, "vNorm");
-        mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor");
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mPositionHandle = GLES30.glGetAttribLocation(mProgram, "vPosition");
+        mNormHandle = GLES30.glGetAttribLocation(mProgram, "vNorm");
+        mInstHandle = GLES30.glGetAttribLocation(mProgram, "vInstance");
+        mColorHandle = GLES30.glGetUniformLocation(mProgram, "vColor");
+        mMVPMatrixHandle = GLES30.glGetUniformLocation(mProgram, "uMVPMatrix");
     }
 }
