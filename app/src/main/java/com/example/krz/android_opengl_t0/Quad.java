@@ -14,6 +14,9 @@ public class Quad {
     protected int mProgram;
     protected FloatBuffer vertexBuffer;
     protected int mPositionHandle;
+    protected int mUVHandle;
+
+    public int texHandle;
 
     protected int[] bufs;
 
@@ -21,13 +24,21 @@ public class Quad {
         mContext = context;
 
         vertices = new float[]{
-                -1.0f, -1.0f, 0.0f,
-                1.0f, -1.0f, 0.0f,
-                -1.0f,  1.0f, 0.0f,
-                -1.0f,  1.0f, 0.0f,
-                1.0f, -1.0f, 0.0f,
-                1.0f,  1.0f, 0.0f,
+                -1.0f, -1.0f, 0.0f,0.0f,
+                1.0f, -1.0f, 1.0f,0.0f,
+                -1.0f,  1.0f, 0.0f,1.0f,
+                -1.0f,  1.0f, 0.0f,1.0f,
+                1.0f, -1.0f, 1.0f,0.0f,
+                1.0f,  1.0f, 1.0f,1.0f,
         };
+//        vertices = new float[]{
+//                -1.0f, -1.0f, 1.0f,1.0f,
+//                1.0f, -1.0f, 1.0f,1.0f,
+//                -1.0f,  1.0f, 1.0f,1.0f,
+//                -1.0f,  1.0f, 1.0f,1.0f,
+//                1.0f, -1.0f, 1.0f,1.0f,
+//                1.0f,  1.0f, 1.0f,1.0f,
+//        };
 
         init("vert_passthrough.glsl", "frag_quad.glsl");
 
@@ -63,22 +74,34 @@ public class Quad {
         GLES30.glLinkProgram(mProgram);
 
         mPositionHandle = GLES30.glGetAttribLocation(mProgram, "vPosition");
+        mUVHandle = GLES30.glGetAttribLocation(mProgram, "vUV");
+        texHandle = GLES30.glGetUniformLocation(mProgram, "renderedTexture");
     }
 
-    public void draw() {
+    public void draw(int texture) {
         // Add program to OpenGL ES environment
         GLES30.glUseProgram(mProgram);
 
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[0]);
         GLES30.glEnableVertexAttribArray(mPositionHandle);
-        GLES30.glVertexAttribPointer(mPositionHandle, 3,
+        GLES30.glVertexAttribPointer(mPositionHandle, 2,
                 GLES30.GL_FLOAT, false,
 //                3*4, vertexBuffer);
-                3*4, 0);
+                4*4, 0);
+        GLES30.glEnableVertexAttribArray(mUVHandle);
+        GLES30.glVertexAttribPointer(mUVHandle, 2,
+                GLES30.GL_FLOAT, false,
+//                3*4, vertexBuffer);
+                4*4, 8);
+
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D,texture);
+        GLES30.glUniform1ui(texHandle,0);
 
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 6);
 
         GLES30.glDisableVertexAttribArray(mPositionHandle);
+        GLES30.glDisableVertexAttribArray(mUVHandle);
 
     }
 

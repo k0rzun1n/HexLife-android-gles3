@@ -13,24 +13,29 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
+import static android.opengl.GLES20.GL_FRAMEBUFFER;
 
 //import android.opengl.GLES30Ext;
 
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
+    int[] frameBufs;
+    private final float[] mMVPMatrix = new float[16];
+    private final float[] mProjectionMatrix = new float[16];
+    private final float[] mViewMatrix = new float[16];
     private Quad mQuad;
     private Cylinder mCyl;
     private Context mContext;
     public float[] mClearColor;
     float[] mEye;
     float[] mEyeRotation; //zy
-    int[] frameBufs;
+
     int[] rendTex;
+    int[] rendBuf;
 
     private HexLifeGame hlg = new HexLifeGame();
 
@@ -66,45 +71,68 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         mEye = new float[]{-6.0f, 0.0f, 3.0f};
         mEyeRotation = new float[]{0.0f, 0.0f};
-        mClearColor = new float[]{0.3f, 0.0f, 0.0f, 1.0f};
+        mClearColor = new float[]{0.2f, 0.0f, 0.0f, 1.0f};
         mQuad = new Quad(mContext);
         mCyl = new Cylinder(mContext);
         GLES30.glClearColor(mClearColor[0], mClearColor[1], mClearColor[2], mClearColor[3]);
-        hlg.step();
+//        hlg.step();
 
-        frameBufs = new int[2];
-        GLES30.glGenFramebuffers(2, frameBufs, 0);
+        frameBufs = new int[1];
+        GLES30.glGenFramebuffers(1, frameBufs, 0);
 
         rendTex = new int[2];
         GLES30.glGenTextures(2, rendTex, 0);
 
-        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, rendTex[0]);
-//        Buffer tex = ByteBuffer.allocateDirect(100*100*4);
-        Buffer tex = ByteBuffer.allocateDirect(1);
-        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, 100, 100, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, tex);
-
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//        GLES2
-//        GLES30.glCheckFramebufferStatus()
-//        GLES30.glFramebufferTexture2D(GLES30.GL_COLOR_ATTACHMENT0,);
-
-//        ByteBuffer bb = ByteBuffer.allocateDirect()
+        rendBuf = new int[1];
+        GLES30.glGenRenderbuffers(1, rendBuf, 0);
     }
 
     private float[] mRotationMatrix = new float[16];
 
-    public void onDrawFrame(GL10 gl) {
-        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT);
-        GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+    int mWidth, mHeight;
 
-//        Log.d("GLESVER",GLES30.glGetString(GLES30.GL_SHADING_LANGUAGE_VERSION));
-//        Log.d("GLESVER",GLES30.glGetString(GLES30.GL_VERSION));
-        int[] glmax = new int[1];
-//        GLES30.glGetIntegerv(GLES30.GL_MAX_VERTEX_UNIFORM_VECTORS, glmax, 0);
-        GLES30.glGetIntegerv(GLES30.GL_VERTEX_ATTRIB_ARRAY_SIZE, glmax, 0);
-        Log.d("GLESVER", Integer.toString(glmax[0]));
-        Log.d("GLESVER", GLU.gluErrorString(GLES30.glGetError()));
+    @Override
+    public void onSurfaceChanged(GL10 unused, int width, int height) {
+        GLES30.glViewport(0, 0, width, height);
+        float ratio = (float) width / height;
+        mWidth = width;
+        mHeight = height;
+
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, frameBufs[0]);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, rendTex[0]);
+        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, null);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR);
+        GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, rendTex[0], 0);
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0);
+
+
+        GLES30.glBindRenderbuffer(GLES30.GL_RENDERBUFFER, rendBuf[0]);
+        GLES30.glRenderbufferStorage(GLES30.GL_RENDERBUFFER, GLES30.GL_DEPTH_COMPONENT16, width, height);
+        GLES30.glFramebufferRenderbuffer(GLES30.GL_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, GLES30.GL_RENDERBUFFER, rendBuf[0]);
+
+        GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
+
+        Log.d("FBUF", Integer.toString(GLES30.glCheckFramebufferStatus(GL_FRAMEBUFFER)));
+        Log.d("FBUF", Integer.toString(GLES30.GL_FRAMEBUFFER_COMPLETE));
+        Log.d("FBUF", GLU.gluErrorString(GLES30.glGetError()));
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0);
+
+
+        GLES30.glViewport(0, 0, mWidth, mHeight);
+        // this projection matrix is applied to object coordinates
+        // in the onDrawFrame() method
+//        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
+
+        mCyl.setInst(new int[]{
+                0, 0, 1, 0, 1, 1,
+                0, 2, 1, 1, 1, 1,
+                1, 0, 1, 2, 0, 1});
+    }
+
+    public void onDrawFrame(GL10 gl) {
+
 
 //        Matrix.setLookAtM(mViewMatrix, 0, mEye[0], mEye[1], mEye[2], mEye[0] - 1, mEye[1] - 1, mEye[2] - 3, 0f, 0f, 1.0f);
         Matrix.setLookAtM(mViewMatrix, 0,
@@ -119,35 +147,23 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
 
         //--DRAW
-        GLES30.glEnable(GLES30.GL_STENCIL_TEST);
+//        GLES30.glEnable(GLES30.GL_STENCIL_TEST);
 //        GLES30.glStencilFunc(GLES30.GL_NEVER,1,1);
-        GLES30.glStencilFunc(GLES30.GL_ALWAYS, 1, 1);
+//        GLES30.glStencilFunc(GLES30.GL_ALWAYS, 1, 1);
 //        GLES30.glStencilFunc();
-        int[] ixx = new int[10];
-        GLES30.glGetIntegerv(GLES30.GL_STENCIL_BITS, ixx, 0);
-        Log.d("stencbi", Integer.toString(ixx[0]));
-//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER,frameBufs[0]);
-//        mCyl.draw(mMVPMatrix);
-//        Matrix.translateM(mMVPMatrix, 0, -3f, 0, 0);
-//        mCyl.draw(mMVPMatrix);
-//        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER,0);
-        mQuad.draw();
-//        mQuad.draw(scratch);
-    }
+//        int[] ixx = new int[10];
+//        GLES30.glGetIntegerv(GLES30.GL_STENCIL_BITS, ixx, 0);
+//        Log.d("stencbi", Integer.toString(ixx[0]));
+//        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
 
-    private final float[] mMVPMatrix = new float[16];
-    private final float[] mProjectionMatrix = new float[16];
-    private final float[] mViewMatrix = new float[16];
+        GLES30.glBindFramebuffer(GL_FRAMEBUFFER, frameBufs[0]);
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
+        GLES30.glEnable(GLES30.GL_DEPTH_TEST);
+        mCyl.draw(mMVPMatrix);
 
-    @Override
-    public void onSurfaceChanged(GL10 unused, int width, int height) {
-        GLES30.glViewport(0, 0, width, height);
-        float ratio = (float) width / height;
-
-        // this projection matrix is applied to object coordinates
-        // in the onDrawFrame() method
-//        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0);
+        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
+        mQuad.draw(rendTex[0]);
     }
 
     public static int loadShader(Context context, int type, String shaderFileName) {
