@@ -21,26 +21,58 @@ public class HexLifeGame {
         Cells.put(new Pair(2, 0), (byte) (1 << 7));
         Cells.put(new Pair(0, 1), (byte) (1 << 7));
         Cells.put(new Pair(0, 2), (byte) (1 << 7));
+//        Cells.put(new Pair(1, -2), (byte) (1 << 7));
+//        Cells.put(new Pair(0, -2), (byte) (1 << 7));
+//        Cells.put(new Pair(-1, -1), (byte) (1 << 7));
     }
 
-    public int getField(int cx, int cy, int radius) {
+    public int[] getField(int cx, int cy, int radius) {
+        int[] res = new int[fieldSize(radius)*3];
         int stx, sty;
+        Pair p = new Pair(0, 0);
         sty = cy + radius;
-        stx = cx - radius + 1 + (radius % 2) * ((sty + 1) % 2);
+//        stx = cx - radius + 1 + (radius % 2) * ((sty + 1) % 2);
         StringBuilder sb = new StringBuilder(", ");
         // 0 0 1 1 2 1 3 2 4 2 5 3 6 3
         int even = sty % 2 == 0 ? 1 : 2;
-        for (int i = 0; i < radius + 1; i++) {
+        int id = 0;
+        for (int i = 0; i < radius; i++) {
             int row = cy + radius - i;
-//            int row2 = cy - radius + i;
+            int row2 = cy - radius + i;
             int colStart = cx - 1 - (i + even) / 2; // :\
             for (int j = 0; j < radius + i + 1; j++) {
-                int col = colStart+j;
+                int col = colStart + j;
+                p.x = col;
+                p.y = row;
+                Byte b = Cells.get(p);
+                res[id + 0] = p.x;
+                res[id + 1] = p.y;
+                res[id + 2] = b == null ? 0 : 1;
+                id += 3;
+
+                p.x = col;
+                p.y = row2;
+                b = Cells.get(p);
+                res[id + 0] = p.x;
+                res[id + 1] = p.y;
+                res[id + 2] = b == null ? 0 : 1;
+                id += 3;
                 sb.append(Integer.toString(col) + ":" + Integer.toString(row) + "  ");
+                sb.append(Integer.toString(col) + ":" + Integer.toString(row2) + "  ");
             }
         }
+        for (int i = 0; i < 2 * radius + 1; i++) {
+            p.x = cx - radius + i;
+            p.y = cy;
+            Byte b = Cells.get(p);
+            res[id + 0] = p.x;
+            res[id + 1] = p.y;
+            res[id + 2] = b == null ? 0 : 1;
+            id += 3;
+            sb.append(Integer.toString(cx-radius+i) + "|" + Integer.toString(cy) + "  ");
+        }
         Log.d("GetField", sb.toString());
-        return 1;
+        return res;
     }
 
     public int fieldSize(int radius) {

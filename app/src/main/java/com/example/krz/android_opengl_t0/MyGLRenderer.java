@@ -70,6 +70,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
         mEye = new float[]{-6.0f, 0.0f, 3.0f};
+        mEye = new float[]{-6.0f, 0.0f, 30.0f};
         mEyeRotation = new float[]{0.0f, 0.0f};
         mClearColor = new float[]{0.2f, 0.0f, 0.0f, 1.0f};
         mQuad = new Quad(mContext);
@@ -85,8 +86,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         rendBuf = new int[1];
         GLES30.glGenRenderbuffers(1, rendBuf, 0);
+
+        mHLG = new HexLifeGame();
     }
 
+    HexLifeGame mHLG;
     private float[] mRotationMatrix = new float[16];
 
     int mWidth, mHeight;
@@ -125,10 +129,15 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
 
-        mCyl.setInst(new int[]{
-                0, 0, 1, 0, 1, 1,
-                0, 2, 1, 1, 1, 1,
-                1, 0, 1, 2, 0, 1});
+//        mCyl.setInst(new int[]{
+//                0, 0, 0,
+//                0, 1, 1,
+//                0, 2, 1,
+//                1, 1, 0,
+//                1, 0, 1, 2, 0, 1,
+//                -1, -2, 1, 0, -2, 1
+//        });
+        mCyl.setInst(mHLG.getField(0,0,3));
     }
 
     public void onDrawFrame(GL10 gl) {

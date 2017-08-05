@@ -2,6 +2,7 @@ package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
 import android.opengl.GLES30;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -21,14 +22,18 @@ public class Cylinder {
     protected FloatBuffer normalBuffer;
     protected int mPositionHandle;
     protected int mColorHandle;
+    protected int mHeightHandle;
     protected int mNormHandle;
     protected int mInstHandle;
+    protected int mTFStateHandle;
+    protected int mTFHeightHandle;
     protected int[] bufs;
     protected final Context mContext;
     protected float[] vertices = null;
     protected float[] normals = null;
     protected int[] instance = null;
     protected int mProgram;
+    protected int mTFProgram;
 
     public Cylinder(Context context) {
         mContext = context;
@@ -129,7 +134,7 @@ public class Cylinder {
         float ct = (float) Math.cos(Math.PI / 6);
         float st = (float) Math.sin(Math.PI / 6);
 
-        float nx,ny;
+        float nx, ny;
         for (int i = 0; i < vertices.length; i += 3) {
             nx = vertices[i] * ct - vertices[i + 1] * st;
             ny = vertices[i] * st + vertices[i + 1] * ct;
@@ -162,7 +167,12 @@ public class Cylinder {
         instBuffer.position(0);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4, instBuffer, GLES30.GL_STATIC_DRAW); //todo dyndraw?
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_DYNAMIC_DRAW); //todo dyndraw?
+//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
+//        GLES30.glBufferData(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_STATIC_READ); //todo dyndraw?
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
+        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0);
     }
 
     protected void init(String vsFName, String fsFName) {
@@ -186,14 +196,15 @@ public class Cylinder {
         normalBuffer.put(normals);
         normalBuffer.position(0);
 
-        bufs = new int[3];
-        GLES30.glGenBuffers(3, bufs, 0);
+        bufs = new int[4];//vertex, normal, x|y|state, tf_height
+        GLES30.glGenBuffers(4, bufs, 0);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[0]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, vertexBuffer.capacity() * 4, vertexBuffer, GLES30.GL_STATIC_DRAW);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[1]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, normalBuffer.capacity() * 4, normalBuffer, GLES30.GL_STATIC_DRAW);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
         vertexBuffer = null;
+
         normalBuffer = null;
         instBuffer = null;
         vertices = null;
@@ -207,19 +218,72 @@ public class Cylinder {
         mProgram = GLES30.glCreateProgram();
         GLES30.glAttachShader(mProgram, vertexShader);
         GLES30.glAttachShader(mProgram, fragmentShader);
-        // creates OpenGL ES program executables
+
         GLES30.glLinkProgram(mProgram);
 
         mPositionHandle = GLES30.glGetAttribLocation(mProgram, "vPosition");
         mNormHandle = GLES30.glGetAttribLocation(mProgram, "vNorm");
         mInstHandle = GLES30.glGetAttribLocation(mProgram, "vInstance");
+        mHeightHandle = GLES30.glGetAttribLocation(mProgram, "vHeight");
         mColorHandle = GLES30.glGetUniformLocation(mProgram, "vColor");
         mMVPMatrixHandle = GLES30.glGetUniformLocation(mProgram, "uMVPMatrix");
+
+
+        mTFProgram = GLES30.glCreateProgram();
+        int tfShader = MyGLRenderer.loadShader(mContext, GLES30.GL_VERTEX_SHADER,
+                "vert_tf_smoothmove.glsl");
+        int tfShader2 = MyGLRenderer.loadShader(mContext, GLES30.GL_FRAGMENT_SHADER,
+                "frag_tf_smoothmove.glsl");
+        GLES30.glAttachShader(mTFProgram, tfShader);
+        GLES30.glAttachShader(mTFProgram, tfShader2);
+        GLES30.glTransformFeedbackVaryings(mTFProgram, new String[]{"newHeight"}, GLES30.GL_INTERLEAVED_ATTRIBS);
+        GLES30.glLinkProgram(mTFProgram);
+
+        int[] linkSuccessful = new int[1];
+        GLES30.glGetProgramiv(mTFProgram, GLES30.GL_LINK_STATUS, linkSuccessful, 0);
+        if (linkSuccessful[0] != 1){
+            Log.d("shaz", "glLinkProgram failed");
+        }
+
+        mTFStateHandle = GLES30.glGetAttribLocation(mTFProgram, "vState");
+        mTFHeightHandle = GLES30.glGetAttribLocation(mTFProgram, "vHeight");
+
     }
 
 
     public void draw(float[] mvpMatrix) {
-        // Add program to OpenGL ES environment
+
+        GLES30.glUseProgram(mTFProgram);
+        GLES30.glEnable(GLES30.GL_RASTERIZER_DISCARD);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
+        GLES30.glEnableVertexAttribArray(mTFStateHandle);
+        GLES30.glVertexAttribPointer(mTFStateHandle, 1,
+                GLES30.GL_INT, false,
+                3*4, 2*4);//x|y|state
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
+        GLES30.glEnableVertexAttribArray(mTFHeightHandle);
+        GLES30.glVertexAttribPointer(mTFHeightHandle, 1,
+                GLES30.GL_FLOAT, false,
+                4, 0);
+
+//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
+        GLES30.glBindBufferBase(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0, bufs[3]);
+
+        GLES30.glBeginTransformFeedback(GLES30.GL_POINTS);
+        GLES30.glDrawArrays(GLES30.GL_POINTS, 0, instBuffer.capacity() / 3);
+        GLES30.glEndTransformFeedback();
+
+        GLES30.glFlush();//without this 1 cylinder gets torn (more/less on other devices?)
+
+//        Buffer br = GLES30.glMapBufferRange(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0, instBuffer.capacity() * 4 / 3, GLES30.GL_MAP_READ_BIT);
+//        FloatBuffer fbr = ((ByteBuffer) br).order(nativeOrder()).asFloatBuffer();
+//        Log.d("shax", Float.toString(fbr.get()));
+//        GLES30.glUnmapBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER);
+
+        GLES30.glDisableVertexAttribArray(mTFStateHandle);
+        GLES30.glDisableVertexAttribArray(mTFHeightHandle);
+        GLES30.glDisable(GLES30.GL_RASTERIZER_DISCARD);
+
         GLES30.glUseProgram(mProgram);
 
         GLES30.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
@@ -243,10 +307,16 @@ public class Cylinder {
         GLES30.glEnableVertexAttribArray(mInstHandle);
         GLES30.glVertexAttribPointer(mInstHandle, 3,
                 GLES30.GL_INT, false,
-//                vertexStride, normalBuffer);
                 3 * 4, 0);
-
         GLES30.glVertexAttribDivisor(mInstHandle, 1);
+
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
+        GLES30.glEnableVertexAttribArray(mHeightHandle);
+        GLES30.glVertexAttribPointer(mHeightHandle, 1,
+                GLES30.GL_FLOAT, false,
+                4, 0);
+        GLES30.glVertexAttribDivisor(mHeightHandle, 1);
+
 
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
         float[] color = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -259,6 +329,7 @@ public class Cylinder {
 
 
         GLES30.glDisableVertexAttribArray(mPositionHandle);
+        GLES30.glDisableVertexAttribArray(mHeightHandle);
         GLES30.glDisableVertexAttribArray(mNormHandle);
         GLES30.glDisableVertexAttribArray(mInstHandle);
 

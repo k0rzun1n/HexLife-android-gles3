@@ -19,11 +19,7 @@ class MyGLSurfaceView extends GLSurfaceView {
     private float mPreviousY;
     private TextView mTv;
 
-    //    @Override
-//    protected void onFinishInflate(){
-//        super();
-//
-//    }
+
     public void moveCamera(float dx, float dy) {
         mRenderer.moveCamera(dx, dy);
         requestRender();
