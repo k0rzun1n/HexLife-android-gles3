@@ -9,17 +9,10 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private MyGLSurfaceView mGLView;
-
+    private HexLifeGame mHLG;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        HexLifeGame hlg = new HexLifeGame();
-//        hlg.getField(0,0,3);
-//        hlg.getField(0,1,3);
-//        Intent intent = new Intent(Intent.ACTION_MAIN);
-//        intent.addCategory(Intent.CATEGORY_HOME);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        startActivity(intent);
 
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -38,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeBGColor(View v) {
-        mGLView.setBGColor(new float[]{0f, 0.3f, 0.7f, 1f});
+//        mGLView.setBGColor(new float[]{0f, 0.3f, 0.7f, 1f});
+        mGLView.gameStep();
     }
 }
 

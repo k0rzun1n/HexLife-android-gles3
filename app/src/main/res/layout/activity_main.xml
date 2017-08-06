@@ -37,13 +37,13 @@
         android:id="@+id/button"
         android:layout_width="110dp"
         android:layout_height="110dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="228dp"
         android:background="#6400003c"
         android:onClick="changeBGColor"
         android:text="Butt"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent" />
 
     <view
         android:id="@+id/mJoystick"

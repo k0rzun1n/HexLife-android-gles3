@@ -29,6 +29,16 @@ class MyGLSurfaceView extends GLSurfaceView {
         mRenderer.setTextView(tv);
     }
 
+    public void gameStep() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mRenderer.gameStep();
+            }
+        });
+        requestRender();
+    }
+
     public void setBGColor(float[] newCol) {
         queueEvent(new Runnable() {
             @Override
@@ -47,7 +57,7 @@ class MyGLSurfaceView extends GLSurfaceView {
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
-        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+//        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
     public MyGLSurfaceView(Context context) {

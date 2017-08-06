@@ -30,23 +30,24 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private Quad mQuad;
     private Cylinder mCyl;
     private Context mContext;
-    public float[] mClearColor;
     float[] mEye;
     float[] mEyeRotation; //zy
 
     int[] rendTex;
     int[] rendBuf;
 
-    private HexLifeGame hlg = new HexLifeGame();
+    private HexLifeGame mHLG;
 
     public MyGLRenderer(Context context) {
         super();
+        mHLG = new HexLifeGame();
         mContext = context;
     }
-
-    public void setmClearColor(float[] newCol) {
-        for (int i = 0; i < 4; i++)
-            mClearColor[i] = newCol[i];
+    public void gameStep(){
+        //add nullchecks
+        mHLG.step();
+        mCyl.setInst(mHLG.getField(0,0,7));
+//        GLES30.glClearColor(0,1f,0,1f);
     }
 
     public void moveCamera(float dx, float dy) {
@@ -69,13 +70,12 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
-        mEye = new float[]{-6.0f, 0.0f, 3.0f};
-        mEye = new float[]{-6.0f, 0.0f, 30.0f};
+//        mEye = new float[]{-6.0f, 0.0f, 3.0f};
+        mEye = new float[]{-6.0f, 0.0f, 12.0f};
         mEyeRotation = new float[]{0.0f, 0.0f};
-        mClearColor = new float[]{0.2f, 0.0f, 0.0f, 1.0f};
         mQuad = new Quad(mContext);
         mCyl = new Cylinder(mContext);
-        GLES30.glClearColor(mClearColor[0], mClearColor[1], mClearColor[2], mClearColor[3]);
+        GLES30.glClearColor(0.1f,0f,0f,1f);
 //        hlg.step();
 
         frameBufs = new int[1];
@@ -86,11 +86,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         rendBuf = new int[1];
         GLES30.glGenRenderbuffers(1, rendBuf, 0);
-
-        mHLG = new HexLifeGame();
     }
-
-    HexLifeGame mHLG;
     private float[] mRotationMatrix = new float[16];
 
     int mWidth, mHeight;
@@ -107,6 +103,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, null);
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
         GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, rendTex[0], 0);
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0);
 
@@ -137,7 +135,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //                1, 0, 1, 2, 0, 1,
 //                -1, -2, 1, 0, -2, 1
 //        });
-        mCyl.setInst(mHLG.getField(0,0,3));
+        mCyl.setInst(mHLG.getField(0,1,3));
     }
 
     public void onDrawFrame(GL10 gl) {

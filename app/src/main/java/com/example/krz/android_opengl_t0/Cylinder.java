@@ -22,11 +22,11 @@ public class Cylinder {
     protected FloatBuffer normalBuffer;
     protected int mPositionHandle;
     protected int mColorHandle;
-    protected int mHeightHandle;
+    protected int mTransitionHandle;
     protected int mNormHandle;
     protected int mInstHandle;
     protected int mTFStateHandle;
-    protected int mTFHeightHandle;
+    protected int mTFTransitionHandle;
     protected int[] bufs;
     protected final Context mContext;
     protected float[] vertices = null;
@@ -224,7 +224,7 @@ public class Cylinder {
         mPositionHandle = GLES30.glGetAttribLocation(mProgram, "vPosition");
         mNormHandle = GLES30.glGetAttribLocation(mProgram, "vNorm");
         mInstHandle = GLES30.glGetAttribLocation(mProgram, "vInstance");
-        mHeightHandle = GLES30.glGetAttribLocation(mProgram, "vHeight");
+        mTransitionHandle = GLES30.glGetAttribLocation(mProgram, "vTransition");
         mColorHandle = GLES30.glGetUniformLocation(mProgram, "vColor");
         mMVPMatrixHandle = GLES30.glGetUniformLocation(mProgram, "uMVPMatrix");
 
@@ -246,7 +246,7 @@ public class Cylinder {
         }
 
         mTFStateHandle = GLES30.glGetAttribLocation(mTFProgram, "vState");
-        mTFHeightHandle = GLES30.glGetAttribLocation(mTFProgram, "vHeight");
+        mTFTransitionHandle = GLES30.glGetAttribLocation(mTFProgram, "vTransition");
 
     }
 
@@ -261,8 +261,8 @@ public class Cylinder {
                 GLES30.GL_INT, false,
                 3*4, 2*4);//x|y|state
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glEnableVertexAttribArray(mTFHeightHandle);
-        GLES30.glVertexAttribPointer(mTFHeightHandle, 1,
+        GLES30.glEnableVertexAttribArray(mTFTransitionHandle);
+        GLES30.glVertexAttribPointer(mTFTransitionHandle, 1,
                 GLES30.GL_FLOAT, false,
                 4, 0);
 
@@ -281,7 +281,7 @@ public class Cylinder {
 //        GLES30.glUnmapBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER);
 
         GLES30.glDisableVertexAttribArray(mTFStateHandle);
-        GLES30.glDisableVertexAttribArray(mTFHeightHandle);
+        GLES30.glDisableVertexAttribArray(mTFTransitionHandle);
         GLES30.glDisable(GLES30.GL_RASTERIZER_DISCARD);
 
         GLES30.glUseProgram(mProgram);
@@ -311,11 +311,11 @@ public class Cylinder {
         GLES30.glVertexAttribDivisor(mInstHandle, 1);
 
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glEnableVertexAttribArray(mHeightHandle);
-        GLES30.glVertexAttribPointer(mHeightHandle, 1,
+        GLES30.glEnableVertexAttribArray(mTransitionHandle);
+        GLES30.glVertexAttribPointer(mTransitionHandle, 1,
                 GLES30.GL_FLOAT, false,
                 4, 0);
-        GLES30.glVertexAttribDivisor(mHeightHandle, 1);
+        GLES30.glVertexAttribDivisor(mTransitionHandle, 1);
 
 
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
@@ -329,7 +329,7 @@ public class Cylinder {
 
 
         GLES30.glDisableVertexAttribArray(mPositionHandle);
-        GLES30.glDisableVertexAttribArray(mHeightHandle);
+        GLES30.glDisableVertexAttribArray(mTransitionHandle);
         GLES30.glDisableVertexAttribArray(mNormHandle);
         GLES30.glDisableVertexAttribArray(mInstHandle);
 
