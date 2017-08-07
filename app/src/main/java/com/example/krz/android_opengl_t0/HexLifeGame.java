@@ -104,6 +104,12 @@ public class HexLifeGame {
         else val += n;
         Cells.put(tmp, val);
     }
+    public void switchCell(int x,int y){
+        Pair tmp = new Pair(x, y);
+        Integer val = Cells.get(tmp);
+        if (val == null) Cells.put(tmp, 1);
+        else Cells.remove(tmp);
+    }
 
     public void step() {
         Pair t = new Pair(0, 0);
@@ -136,14 +142,14 @@ public class HexLifeGame {
             val = Cells.get(p);
             int closeNeighbours = (val>>1) & 7;
             int farNeighbours = (val >> 4) & 15;
-            int curState = val & 1;
+            boolean alive = ((val & 1) ==1);
 
-            Integer newVal = 0;
+//            Integer newVal = 0;
 
-            if (closeNeighbours > 0 && curState == 0) {
-                newVal = 1 ;
-                Cells.put(p, newVal);
-            } else
+            if (closeNeighbours >= 2 && closeNeighbours <= 3 && alive
+                    ||closeNeighbours >= 2 && closeNeighbours <= 2 && !alive)
+                Cells.put(p, 1);
+            else
                 Cells.remove(p);
         }
     }

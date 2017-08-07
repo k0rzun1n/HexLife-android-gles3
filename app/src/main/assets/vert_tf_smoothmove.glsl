@@ -8,7 +8,7 @@ out float newHeight;
 
 void main() {
     int alive = vState & 1;
-
+    //curtime - timechanged */+-... = transition
 //    newHeight = vTransition+0.01*(float(vState));
     newHeight = mix(vTransition,float(alive),0.05);
 //    newHeight = (float(alive));

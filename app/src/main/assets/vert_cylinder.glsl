@@ -8,10 +8,12 @@ layout(location = 3)in float vTransition;
 //attribute vec4 vPosition;
 out float light_intensity;
 out vec4 fColor;
+flat out ivec2 fGridCoord;
 vec3 lightPos = vec3(-5,-5,10);
 float cellRadius = 1.1;
 
 void main() {
+    fGridCoord = ivec2(vInstance[0],vInstance[1]);//pack alive somewhere?
     bool alive = (vInstance[2]&1) == 1;
 //    fColor = alive
 //    ?vec4(0.0,1.0,0.0,1.0)

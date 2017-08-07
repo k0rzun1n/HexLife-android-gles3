@@ -13,6 +13,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -33,21 +34,43 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     float[] mEye;
     float[] mEyeRotation; //zy
 
-    int[] rendTex;
     int[] rendBuf;
 
     private HexLifeGame mHLG;
+
+    int[] rendTex;
+    private int camGridX;
+    private int camGridY;
+    private int renderRadius = 7;
 
     public MyGLRenderer(Context context) {
         super();
         mHLG = new HexLifeGame();
         mContext = context;
     }
-    public void gameStep(){
+
+    public void gameStep() {
         //add nullchecks
         mHLG.step();
-        mCyl.setInst(mHLG.getField(0,0,7));
+        mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
+//        mCyl.setInst(mHLG.getField(0, 0, 7));
 //        GLES30.glClearColor(0,1f,0,1f);
+    }
+
+    public void switchCellAtPixel(final int x, final int y) {
+        //probably need to lock something
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, frameBufs[0]);
+        GLES30.glReadBuffer(GLES30.GL_COLOR_ATTACHMENT1);
+        IntBuffer ret = IntBuffer.allocate(2);
+        GLES30.glReadPixels(x, mHeight - y, 1, 1, GLES30.GL_RG_INTEGER, GLES30.GL_INT, ret);
+        Log.d("rdpx",
+                Integer.toString(ret.get(0)) + " " +
+                        Integer.toString(ret.get(1)));
+        mHLG.switchCell(ret.get(0), ret.get(1));
+        ret.clear();
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0);
+//        mCyl.setInst(mHLG.getField(0, 0, 7));
+        mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
     }
 
     public void moveCamera(float dx, float dy) {
@@ -55,6 +78,15 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         double speed = 0.2;
         mEye[0] += speed * (-dx * Math.sin(zRotRad) - dy * Math.cos(zRotRad));
         mEye[1] += speed * (-dx * Math.cos(zRotRad) + dy * Math.sin(zRotRad));
+
+        float cellRadius = 1.1f;
+        float xc = cellRadius * (float) Math.sqrt(3.0);
+        float yc = cellRadius * 1.5f;
+        boolean camMoved = false;
+        camGridY = (int) (mEye[1] / yc);
+        camGridX = (int) ((mEye[0] - (camGridY % 2) * 0.5f) / xc);
+        if (camMoved) mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
+//        Log.d("cam",Integer.toString(camGridX)+":"+Integer.toString(camGridY));
     }
 
     public void rotateCamera(float dx, float dy) {
@@ -72,10 +104,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 //        mEye = new float[]{-6.0f, 0.0f, 3.0f};
         mEye = new float[]{-6.0f, 0.0f, 12.0f};
-        mEyeRotation = new float[]{0.0f, 0.0f};
+        mEyeRotation = new float[]{0.0f, 60.0f};
         mQuad = new Quad(mContext);
         mCyl = new Cylinder(mContext);
-        GLES30.glClearColor(0.1f,0f,0f,1f);
+        GLES30.glClearColor(0.1f, 0f, 0f, 1f);
 //        hlg.step();
 
         frameBufs = new int[1];
@@ -87,6 +119,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         rendBuf = new int[1];
         GLES30.glGenRenderbuffers(1, rendBuf, 0);
     }
+
     private float[] mRotationMatrix = new float[16];
 
     int mWidth, mHeight;
@@ -106,6 +139,16 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
         GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, rendTex[0], 0);
+
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, rendTex[1]);
+        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RG32I, width / 1, height / 1, 0, GLES30.GL_RG_INTEGER, GLES30.GL_INT, null);
+//        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RG8, width, height, 0, GLES30.GL_RG, GLES30.GL_INT, null); //rg16i is probably enough
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE);
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE);
+        GLES30.glFramebufferTexture2D(GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT1, GLES30.GL_TEXTURE_2D, rendTex[1], 0);
+
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, 0);
 
 
@@ -113,7 +156,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES30.glRenderbufferStorage(GLES30.GL_RENDERBUFFER, GLES30.GL_DEPTH_COMPONENT16, width, height);
         GLES30.glFramebufferRenderbuffer(GLES30.GL_FRAMEBUFFER, GLES30.GL_DEPTH_ATTACHMENT, GLES30.GL_RENDERBUFFER, rendBuf[0]);
 
-        GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
+        GLES30.glDrawBuffers(2, new int[]{GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_COLOR_ATTACHMENT1}, 0);
+//        GLES30.glDrawBuffers(1, new int[]{GLES30.GL_COLOR_ATTACHMENT0}, 0);
 
         Log.d("FBUF", Integer.toString(GLES30.glCheckFramebufferStatus(GL_FRAMEBUFFER)));
         Log.d("FBUF", Integer.toString(GLES30.GL_FRAMEBUFFER_COMPLETE));
@@ -135,7 +179,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //                1, 0, 1, 2, 0, 1,
 //                -1, -2, 1, 0, -2, 1
 //        });
-        mCyl.setInst(mHLG.getField(0,1,3));
+        mCyl.setInst(mHLG.getField(0, 1, 3));
     }
 
     public void onDrawFrame(GL10 gl) {
@@ -171,6 +215,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         mQuad.draw(rendTex[0]);
+
     }
 
     public static int loadShader(Context context, int type, String shaderFileName) {

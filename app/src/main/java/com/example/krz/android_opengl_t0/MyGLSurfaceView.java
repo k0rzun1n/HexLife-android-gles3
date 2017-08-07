@@ -20,9 +20,15 @@ class MyGLSurfaceView extends GLSurfaceView {
     private TextView mTv;
 
 
-    public void moveCamera(float dx, float dy) {
-        mRenderer.moveCamera(dx, dy);
-        requestRender();
+    public void moveCamera(final float dx, final float dy) {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mRenderer.moveCamera(dx, dy);
+            }
+        });
+
+//        requestRender();
     }
 
     public void setTextView(TextView tv) {
@@ -36,7 +42,7 @@ class MyGLSurfaceView extends GLSurfaceView {
                 mRenderer.gameStep();
             }
         });
-        requestRender();
+//        requestRender();
     }
 
     public void setBGColor(float[] newCol) {
@@ -84,16 +90,25 @@ class MyGLSurfaceView extends GLSurfaceView {
 
         float x = e.getX();
         float y = e.getY();
-//        e.getpo
-//        Log.d("buttz","press");
+        final int xi = (int) x;
+        final int yi = (int) y;
+
+        //pinch fov?
         switch (e.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 tt = System.currentTimeMillis();
                 Log.d("buttst", Long.toString(tt));
                 break;
             case MotionEvent.ACTION_UP:
-                if (System.currentTimeMillis() - tt < 2000)
-                    Log.d("butt", "clicked__");
+                if (System.currentTimeMillis() - tt < 100) {
+                    queueEvent(new Runnable() {
+                        @Override
+                        public void run() {
+                            mRenderer.switchCellAtPixel(xi, yi);
+                        }
+                    });
+                    Log.d("butt", "clicked__" + Float.toString(x) + "|" + Float.toString(y));
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 float dx = x - mPreviousX;

@@ -151,30 +151,6 @@ public class Cylinder {
     }
 
 
-    private ByteBuffer ib;
-    protected IntBuffer instBuffer;
-
-    public void setInst(int[] ins) {
-//        instance = ins;
-
-        if (instBuffer == null || instBuffer.capacity() < ins.length) {
-            // (# of coordinate values * 4 bytes per int)
-            ib = ByteBuffer.allocateDirect(ins.length * 4);
-            ib.order(nativeOrder());
-            instBuffer = ib.asIntBuffer();
-        }
-        instBuffer.put(ins);
-        instBuffer.position(0);
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
-        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4, instBuffer, GLES30.GL_STATIC_DRAW); //todo dyndraw?
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_DYNAMIC_DRAW); //todo dyndraw?
-//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
-//        GLES30.glBufferData(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_STATIC_READ); //todo dyndraw?
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
-        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0);
-    }
-
     protected void init(String vsFName, String fsFName) {
 
         vertexCount = vertices.length / COORDS_PER_VERTEX;
@@ -248,6 +224,30 @@ public class Cylinder {
         mTFStateHandle = GLES30.glGetAttribLocation(mTFProgram, "vState");
         mTFTransitionHandle = GLES30.glGetAttribLocation(mTFProgram, "vTransition");
 
+    }
+
+    private ByteBuffer ib;
+    protected IntBuffer instBuffer;
+
+    public void setInst(int[] ins) {
+//        instance = ins;
+
+        if (instBuffer == null || instBuffer.capacity() < ins.length) {
+            // (# of coordinate values * 4 bytes per int)
+            ib = ByteBuffer.allocateDirect(ins.length * 4);
+            ib.order(nativeOrder());
+            instBuffer = ib.asIntBuffer();
+        }
+        instBuffer.put(ins);
+        instBuffer.position(0);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4, instBuffer, GLES30.GL_STATIC_DRAW); //todo dyndraw?
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_DYNAMIC_DRAW); //todo dyndraw?
+//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
+//        GLES30.glBufferData(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_STATIC_READ); //todo dyndraw?
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
+        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0);
     }
 
 
