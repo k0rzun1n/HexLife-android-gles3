@@ -6,9 +6,7 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.Matrix;
-import android.os.SystemClock;
 import android.util.Log;
-import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -91,15 +89,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public void rotateCamera(float dx, float dy) {
-//        mEye[0] += dx / 100;
         mEyeRotation[0] += dx / 20;
         mEyeRotation[1] += dy / 20;
-        mTv.post(new Runnable() {
-            @Override
-            public void run() {
-                mTv.setText(Float.toString(mEyeRotation[0]) + " : " + Float.toString(mEyeRotation[1]));
-            }
-        });
     }
 
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
@@ -172,20 +163,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
 
-//        mCyl.setInst(new int[]{
-//                0, 0, 0,
-//                0, 1, 1,
-//                0, 2, 1,
-//                1, 1, 0,
-//                1, 0, 1, 2, 0, 1,
-//                -1, -2, 1, 0, -2, 1
-//        });
         mCyl.setInst(mHLG.getField(0, 1, 3));
     }
 
     public void onDrawFrame(GL10 gl) {
-
-
 //        Matrix.setLookAtM(mViewMatrix, 0, mEye[0], mEye[1], mEye[2], mEye[0] - 1, mEye[1] - 1, mEye[2] - 3, 0f, 0f, 1.0f);
         Matrix.setLookAtM(mViewMatrix, 0,
                 0f, 0f, 0f,
@@ -197,17 +178,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
-
         //--DRAW
-//        GLES30.glEnable(GLES30.GL_STENCIL_TEST);
-//        GLES30.glStencilFunc(GLES30.GL_NEVER,1,1);
-//        GLES30.glStencilFunc(GLES30.GL_ALWAYS, 1, 1);
-//        GLES30.glStencilFunc();
-//        int[] ixx = new int[10];
-//        GLES30.glGetIntegerv(GLES30.GL_STENCIL_BITS, ixx, 0);
-//        Log.d("stencbi", Integer.toString(ixx[0]));
-//        GLES30.glActiveTexture(GLES30.GL_TEXTURE0);
-
         GLES30.glBindFramebuffer(GL_FRAMEBUFFER, frameBufs[0]);
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
@@ -234,7 +205,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     }
 
     public static int loadShader(int type, String shaderCode) {
-
         // create a vertex shader type (GLES30.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES30.GL_FRAGMENT_SHADER)
         int shader = GLES30.glCreateShader(type);
@@ -265,11 +235,5 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             }
         }
         return sb.toString();
-    }
-
-    private TextView mTv;
-
-    public void setTextView(TextView tv) {
-        mTv = tv;
     }
 }

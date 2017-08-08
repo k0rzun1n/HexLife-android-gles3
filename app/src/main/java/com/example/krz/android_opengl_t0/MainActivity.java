@@ -5,11 +5,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private MyGLSurfaceView mGLView;
-    private HexLifeGame mHLG;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,19 +17,18 @@ public class MainActivity extends AppCompatActivity {
 
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
-//        mGLView = new MyGLSurfaceView(this);
-//        setContentView(mGLView);
+        // mGLView = new MyGLSurfaceView(this);
+        // setContentView(mGLView);
+
+        //inflate instead
         setContentView(R.layout.activity_main);
         mGLView = (MyGLSurfaceView) findViewById(R.id.myGLView);
         MyJoystick mJoy = (MyJoystick) findViewById(R.id.mJoystick);
 
-        mGLView.setTextView((TextView) findViewById(R.id.debugText));
-        mJoy.setTextView((TextView) findViewById(R.id.debugText2));
         mJoy.setmGLSurfaceView(mGLView);
     }
 
-    public void changeBGColor(View v) {
-//        mGLView.setBGColor(new float[]{0f, 0.3f, 0.7f, 1f});
+    public void gameStep(View v) {
         mGLView.gameStep();
     }
 }

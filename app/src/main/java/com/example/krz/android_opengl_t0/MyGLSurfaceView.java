@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.widget.TextView;
 
 /**
  * Created by krz on 24-Jul-17.
@@ -17,7 +16,6 @@ class MyGLSurfaceView extends GLSurfaceView {
     private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
     private float mPreviousX;
     private float mPreviousY;
-    private TextView mTv;
 
 
     public void moveCamera(final float dx, final float dy) {
@@ -27,12 +25,6 @@ class MyGLSurfaceView extends GLSurfaceView {
                 mRenderer.moveCamera(dx, dy);
             }
         });
-
-//        requestRender();
-    }
-
-    public void setTextView(TextView tv) {
-        mRenderer.setTextView(tv);
     }
 
     public void gameStep() {
@@ -42,7 +34,6 @@ class MyGLSurfaceView extends GLSurfaceView {
                 mRenderer.gameStep();
             }
         });
-//        requestRender();
     }
 
     public void setBGColor(float[] newCol) {
@@ -52,7 +43,6 @@ class MyGLSurfaceView extends GLSurfaceView {
                 GLES30.glClearColor(0, 0.4f, 0.2f, 1);
             }
         });
-        requestRender();
     }
 
     private void init(Context context) {
@@ -76,10 +66,6 @@ class MyGLSurfaceView extends GLSurfaceView {
         init(context);
     }
 
-    //    public MyGLSurfaceView(Context context, AttributeSet attrs, int defStyleAttr) {
-//        super(context, attrs);
-//        init(context);
-//    }
     private long tt;
 
     @Override

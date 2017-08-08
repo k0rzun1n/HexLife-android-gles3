@@ -31,10 +31,6 @@ public class HexLifeGame {
         int stx, sty;
         Pair p = new Pair(0, 0);
         sty = cy + radius;
-//        stx = cx - radius + 1 + (radius % 2) * ((sty + 1) % 2);
-        StringBuilder sb = new StringBuilder(", ");
-        // 0 0 1 1 2 1 3 2 4 2 5 3 6 3
-//        int even = sty % 2 == 0 ? 1 : 2;
         int even = sty % 2 == 0 ? 1 : 0;
         int id = 0;
         for (int i = 0; i < radius; i++) {
@@ -48,7 +44,7 @@ public class HexLifeGame {
                 Integer b = Cells.get(p);
                 res[id + 0] = p.x;
                 res[id + 1] = p.y;
-                res[id + 2] = b == null ? 0 : b; //not 0, get old timer
+                res[id + 2] = b == null ? 0 : b;
                 id += 3;
 
                 p.x = col;
@@ -58,8 +54,6 @@ public class HexLifeGame {
                 res[id + 1] = p.y;
                 res[id + 2] = b == null ? 0 : b;
                 id += 3;
-                sb.append(Integer.toString(col) + ":" + Integer.toString(row) + "  ");
-                sb.append(Integer.toString(col) + ":" + Integer.toString(row2) + "  ");
             }
         }
         for (int i = 0; i < 2 * radius + 1; i++) {
@@ -70,9 +64,7 @@ public class HexLifeGame {
             res[id + 1] = p.y;
             res[id + 2] = b == null ? 0 : b;
             id += 3;
-            sb.append(Integer.toString(cx - radius + i) + "|" + Integer.toString(cy) + "  ");
         }
-        Log.d("GetField", sb.toString());
         return res;
     }
 
@@ -89,7 +81,6 @@ public class HexLifeGame {
             xdiff -= oet;
         else
             xdiff = 0;
-//        Log.d("hlgv", Integer.toString(xdiff + ydiff));
         return xdiff + ydiff;
     }
 
@@ -138,12 +129,10 @@ public class HexLifeGame {
             }
         }
         ks = Cells.keySet().toArray(new Pair[0]);
-//        HashMap<Pair, Integer> newStep = new HashMap<>()
 
         int newTime = (int) (SystemClock.uptimeMillis() - startTime);
         Integer newState = newTime << 8; //pack 24 bits of millisecs into first 3 bytes of int
-        Log.d("hlg__", Integer.toBinaryString(newState));
-        Log.d("hlg  ", Long.toBinaryString(SystemClock.uptimeMillis() - startTime));
+
         newState |= 1; //alive
         for (Pair p : ks) {
             val = Cells.get(p);
@@ -151,19 +140,22 @@ public class HexLifeGame {
             int farNeighbours = (val >> 4) & 15;
             boolean alive = ((val & 1) == 1);
             int cellTime = (val >> 8) & ((1 << 24) - 1);
-
+            int timeDiff = Math.min(1000, Math.max(0, newTime - cellTime));
+            //todo rearrange and figure out rules for far neighbours
             if (closeNeighbours >= 2 && closeNeighbours <= 3 && alive)
-                continue; //keep timer if staying alive
+                Cells.put(p, val & ~((1 << 8) - 2)); //keep timer, remove neighbours, if staying alive
             else if (closeNeighbours >= 2 && closeNeighbours <= 2 && !alive)
                 Cells.put(p, newState);
             else if (alive) {
                 //if alive but is going to die
                 //reverse timer, so transition becomes 0.3->0.7, 0.9->0.1...
-                //2000ms length of transition, changing here change in shader too
-                int newCellState = (newTime - 2000 + Math.min(2000, Math.max(0, newTime - cellTime))) << 8;
+                //1000ms length of transition, changing here change in shader too
+                int newCellState = (newTime - 1000 + timeDiff) << 8;
                 Cells.put(p, newCellState);
-            } else
-                Cells.remove(p); //todo keep dying cells
+            } else if (timeDiff < 1000)
+                Cells.put(p, val & ~((1 << 8) - 2)); //keep timer, remove neighbours, if dying in transition
+            else
+                Cells.remove(p);
         }
     }
 }

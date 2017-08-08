@@ -12,6 +12,19 @@ flat out ivec2 fGridCoord;
 vec3 lightPos = vec3(-5,-5,10);
 float cellRadius = 1.1;
 
+float cubicInOut(float t) {
+  return t < 0.5
+    ? 4.0 * t * t * t
+    : 0.5 * pow(2.0 * t - 2.0, 3.0) + 1.0;
+}
+float cubicIn(float t) {
+  return t * t * t;
+}
+float cubicOut(float t) {
+  float f = t - 1.0;
+  return f * f * f + 1.0;
+}
+
 void main() {
     fGridCoord = ivec2(vInstance[0],vInstance[1]);//pack alive somewhere to add fx in post?
 //    float alive = float(vInstance[2]&1);
@@ -19,27 +32,27 @@ void main() {
 
     uint timeState = uint(((vInstance[2])>>8) & ((1<<24) - 1));
     uint timeDiff = vTime - timeState;
-    float vTransition = float(clamp(timeDiff,0U,2000U))/2000.0;//[0,1]
+    float vTransition = float(clamp(timeDiff,0U,1000U))/1000.0;//[0,1]
 
-//    fColor = alive
-//    ?vec4(0.0,1.0,0.0,1.0)
-//    :vec4(0.0,0.0,0.2,1.0);
+//    vTransition = cubicIn(vTransition);
+    vTransition = cubicInOut(vTransition);
+//    vTransition = cubicOut(vTransition);
+
     vec4 deadColor = vec4(0.0,0.0,0.5,1.0);
     fColor = alive?
-    mix(deadColor,vec4(0.0,1.0,0.0,1.0),vTransition)
+//    mix(deadColor,vec4(0.0,1.0,0.0,1.0),vTransition)
+    mix(vec4(0.0,0.1,0.2,1.0),vec4(0.0,1.0,0.0,1.0),vTransition)
     :mix(vec4(1.0,0.0,0.0,1.0),deadColor,vTransition);
     float xc = cellRadius * sqrt(3.0);
     float yc = cellRadius * 1.5;
     // the matrix must be included as a modifier of gl_Position
     // Note that the uMVPMatrix factor *must be first* in order
     // for the matrix multiplication product to be correct.
-//    vertcol = vec4(1,0,1,1);
     bool mark = (
     vInstance[0]%5 == 0
     ||vInstance[1]%5 == 0);
     light_intensity = (mark ? 0.6 : 1.0) *dot(vNorm , normalize(lightPos));// + vec4(0,0,0,1);
 //    light_intensity = vInstance;// + vec4(0,0,0,1);
-//    gl_Position = uMVPMatrix *(vInstance[0]*xTranslate)*(vInstance[1]*yTranslate)* vec4(vPosition,1);
     gl_Position = uMVPMatrix * (vec4(vPosition,1)
                               + vec4(
                                     //xc*(float(vInstance[0]) + 0.5*float(abs(vInstance[1])%2))
@@ -47,8 +60,4 @@ void main() {
                                     ,yc*float(vInstance[1])
                                     ,alive ? vTransition : (1.0 - vTransition)
                                     ,0));
-//    gl_Position = uMVPMatrix *(vec4(vPosition,1)+vec4(float(vInstance.x),float(vInstance.y),0,0));
-//    gl_Position = uMVPMatrix * (vec4(vPosition,1) + vec4(0,gl_InstanceID,0,0));
-//    gl_Position = uMVPMatrix * vec4(vPosition,1);
-//    pos = uMVPMatrix * vPosition;
 }
