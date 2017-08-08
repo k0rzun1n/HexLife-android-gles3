@@ -2,6 +2,7 @@ package com.example.krz.android_opengl_t0;
 
 import android.content.Context;
 import android.opengl.GLES30;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
@@ -24,19 +25,19 @@ public class Cylinder {
     protected int mColorHandle;
     protected int mTransitionHandle;
     protected int mNormHandle;
+    protected int mTimeHandle;
     protected int mInstHandle;
-    protected int mTFStateHandle;
-    protected int mTFTransitionHandle;
     protected int[] bufs;
     protected final Context mContext;
     protected float[] vertices = null;
     protected float[] normals = null;
     protected int[] instance = null;
     protected int mProgram;
-    protected int mTFProgram;
+    private HexLifeGame mHLG;
 
-    public Cylinder(Context context) {
+    public Cylinder(Context context, HexLifeGame hlg) {
         mContext = context;
+        mHLG = hlg;
 
         int sides = 6;
         float height = 1.0f;
@@ -200,29 +201,10 @@ public class Cylinder {
         mPositionHandle = GLES30.glGetAttribLocation(mProgram, "vPosition");
         mNormHandle = GLES30.glGetAttribLocation(mProgram, "vNorm");
         mInstHandle = GLES30.glGetAttribLocation(mProgram, "vInstance");
-        mTransitionHandle = GLES30.glGetAttribLocation(mProgram, "vTransition");
         mColorHandle = GLES30.glGetUniformLocation(mProgram, "vColor");
+        mTimeHandle = GLES30.glGetUniformLocation(mProgram, "vTime");
         mMVPMatrixHandle = GLES30.glGetUniformLocation(mProgram, "uMVPMatrix");
 
-
-        mTFProgram = GLES30.glCreateProgram();
-        int tfShader = MyGLRenderer.loadShader(mContext, GLES30.GL_VERTEX_SHADER,
-                "vert_tf_smoothmove.glsl");
-        int tfShader2 = MyGLRenderer.loadShader(mContext, GLES30.GL_FRAGMENT_SHADER,
-                "frag_tf_smoothmove.glsl");
-        GLES30.glAttachShader(mTFProgram, tfShader);
-        GLES30.glAttachShader(mTFProgram, tfShader2);
-        GLES30.glTransformFeedbackVaryings(mTFProgram, new String[]{"newHeight"}, GLES30.GL_INTERLEAVED_ATTRIBS);
-        GLES30.glLinkProgram(mTFProgram);
-
-        int[] linkSuccessful = new int[1];
-        GLES30.glGetProgramiv(mTFProgram, GLES30.GL_LINK_STATUS, linkSuccessful, 0);
-        if (linkSuccessful[0] != 1){
-            Log.d("shaz", "glLinkProgram failed");
-        }
-
-        mTFStateHandle = GLES30.glGetAttribLocation(mTFProgram, "vState");
-        mTFTransitionHandle = GLES30.glGetAttribLocation(mTFProgram, "vTransition");
 
     }
 
@@ -242,48 +224,11 @@ public class Cylinder {
         instBuffer.position(0);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4, instBuffer, GLES30.GL_STATIC_DRAW); //todo dyndraw?
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_DYNAMIC_DRAW); //todo dyndraw?
-//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
-//        GLES30.glBufferData(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, instBuffer.capacity() * 4 / 3, null, GLES30.GL_STATIC_READ); //todo dyndraw?
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
-        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0);
     }
 
 
     public void draw(float[] mvpMatrix) {
-
-        GLES30.glUseProgram(mTFProgram);
-        GLES30.glEnable(GLES30.GL_RASTERIZER_DISCARD);
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[2]);
-        GLES30.glEnableVertexAttribArray(mTFStateHandle);
-        GLES30.glVertexAttribPointer(mTFStateHandle, 1,
-                GLES30.GL_INT, false,
-                3*4, 2*4);//x|y|state
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glEnableVertexAttribArray(mTFTransitionHandle);
-        GLES30.glVertexAttribPointer(mTFTransitionHandle, 1,
-                GLES30.GL_FLOAT, false,
-                4, 0);
-
-//        GLES30.glBindBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, bufs[3]);
-        GLES30.glBindBufferBase(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0, bufs[3]);
-
-        GLES30.glBeginTransformFeedback(GLES30.GL_POINTS);
-        GLES30.glDrawArrays(GLES30.GL_POINTS, 0, instBuffer.capacity() / 3);
-        GLES30.glEndTransformFeedback();
-
-        GLES30.glFlush();//without this 1 cylinder gets torn (more/less on other devices?)
-
-//        Buffer br = GLES30.glMapBufferRange(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER, 0, instBuffer.capacity() * 4 / 3, GLES30.GL_MAP_READ_BIT);
-//        FloatBuffer fbr = ((ByteBuffer) br).order(nativeOrder()).asFloatBuffer();
-//        Log.d("shax", Float.toString(fbr.get()));
-//        GLES30.glUnmapBuffer(GLES30.GL_TRANSFORM_FEEDBACK_BUFFER);
-
-        GLES30.glDisableVertexAttribArray(mTFStateHandle);
-        GLES30.glDisableVertexAttribArray(mTFTransitionHandle);
-        GLES30.glDisable(GLES30.GL_RASTERIZER_DISCARD);
-
         GLES30.glUseProgram(mProgram);
 
         GLES30.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
@@ -310,19 +255,20 @@ public class Cylinder {
                 3 * 4, 0);
         GLES30.glVertexAttribDivisor(mInstHandle, 1);
 
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, bufs[3]);
-        GLES30.glEnableVertexAttribArray(mTransitionHandle);
-        GLES30.glVertexAttribPointer(mTransitionHandle, 1,
-                GLES30.GL_FLOAT, false,
-                4, 0);
-        GLES30.glVertexAttribDivisor(mTransitionHandle, 1);
-
 
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0);
         float[] color = {1.0f, 0.0f, 0.0f, 1.0f};
 
 
         GLES30.glUniform4fv(mColorHandle, 1, color, 0);
+//        Long te = ((long)Integer.MAX_VALUE)*2;
+        Long te = 127L;
+        Log.d("tttiz", Integer.toBinaryString(-1));
+
+
+        GLES30.glUniform1ui(mTimeHandle, (int) ((SystemClock.uptimeMillis() - mHLG.startTime) & ((1 << 24) - 1)));
+
+
 //        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, vertexCount);
         GLES30.glDrawArraysInstanced(GLES30.GL_TRIANGLES, 0, vertexCount, instBuffer.capacity() / 3);
 //        GLES30.glDrawElements(GLES30.GL_TRIANGLES, drawOrder.length, GLES30.GL_UNSIGNED_SHORT, drawListBuffer);

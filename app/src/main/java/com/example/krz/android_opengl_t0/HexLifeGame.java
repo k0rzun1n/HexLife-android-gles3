@@ -1,5 +1,6 @@
 package com.example.krz.android_opengl_t0;
 
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -10,24 +11,19 @@ import java.util.HashMap;
 
 public class HexLifeGame {
     HashMap<Pair, Integer> Cells;
+    public long startTime;
 
     //x y
     //byte: ffffcccs  0-1 state, 0-12 far neighbours, 0-6 close neighbours
-    //?int:  8r8g8b 1byte
+    //int:  starttime byte   //more than 4 hours
 
     private int CLOSE_NEIGHBOUR = 1 << 1;
     private int FAR_NEIGHBOUR = 1 << 4;
 
     public HexLifeGame() {
+        startTime = SystemClock.uptimeMillis();
         Cells = new HashMap<Pair, Integer>(100, 0.8f);
         Cells.put(new Pair(0, 0), 1);
-//        Cells.put(new Pair(1, 0), 1 << 7);
-//        Cells.put(new Pair(2, 0), 1 << 7);
-//        Cells.put(new Pair(0, 1), 1 << 7);
-//        Cells.put(new Pair(0, 2), 1 << 7);
-//        Cells.put(new Pair(1, -2), 1 << 7);
-//        Cells.put(new Pair(0, -2), 1 << 7);
-//        Cells.put(new Pair(-1, -1), 1 << 7);
     }
 
     public int[] getField(int cx, int cy, int radius) {
@@ -52,7 +48,7 @@ public class HexLifeGame {
                 Integer b = Cells.get(p);
                 res[id + 0] = p.x;
                 res[id + 1] = p.y;
-                res[id + 2] = b == null ? 0 : b;
+                res[id + 2] = b == null ? 0 : b; //not 0, get old timer
                 id += 3;
 
                 p.x = col;
@@ -104,7 +100,8 @@ public class HexLifeGame {
         else val += n;
         Cells.put(tmp, val);
     }
-    public void switchCell(int x,int y){
+
+    public void switchCell(int x, int y) {
         Pair tmp = new Pair(x, y);
         Integer val = Cells.get(tmp);
         if (val == null) Cells.put(tmp, 1);
@@ -112,45 +109,61 @@ public class HexLifeGame {
     }
 
     public void step() {
+        Log.d("Step", Long.toString(SystemClock.uptimeMillis()));
         Pair t = new Pair(0, 0);
         Integer val;
         Pair[] ks = Cells.keySet().toArray(new Pair[0]);
         for (Pair p : ks) {
-            addToCell(p.x - 1, p.y, CLOSE_NEIGHBOUR);
-            addToCell(p.x + 1, p.y, CLOSE_NEIGHBOUR);
-            addToCell(p.x, p.y - 1, CLOSE_NEIGHBOUR);
-            addToCell(p.x, p.y + 1, CLOSE_NEIGHBOUR);
-            addToCell(p.x + (p.y % 2 == 0 ? -1 : 1), p.y + 1, CLOSE_NEIGHBOUR);
-            addToCell(p.x + (p.y % 2 == 0 ? -1 : 1), p.y - 1, CLOSE_NEIGHBOUR);
+            val = Cells.get(p);
+            if (val != null && ((val & 1) == 1)) {
+                addToCell(p.x - 1, p.y, CLOSE_NEIGHBOUR);
+                addToCell(p.x + 1, p.y, CLOSE_NEIGHBOUR);
+                addToCell(p.x, p.y - 1, CLOSE_NEIGHBOUR);
+                addToCell(p.x, p.y + 1, CLOSE_NEIGHBOUR);
+                addToCell(p.x + (p.y % 2 == 0 ? -1 : 1), p.y + 1, CLOSE_NEIGHBOUR);
+                addToCell(p.x + (p.y % 2 == 0 ? -1 : 1), p.y - 1, CLOSE_NEIGHBOUR);
 
-            addToCell(p.x, p.y + 2, FAR_NEIGHBOUR);
-            addToCell(p.x - 1, p.y + 2, FAR_NEIGHBOUR);
-            addToCell(p.x + 1, p.y + 2, FAR_NEIGHBOUR);
-            addToCell(p.x, p.y - 2, FAR_NEIGHBOUR);
-            addToCell(p.x - 1, p.y - 2, FAR_NEIGHBOUR);
-            addToCell(p.x + 1, p.y - 2, FAR_NEIGHBOUR);
-            addToCell(p.x + (p.y % 2 == 0 ? 1 : 2), p.y + 1, FAR_NEIGHBOUR);
-            addToCell(p.x + (p.y % 2 == 0 ? 1 : 2), p.y - 1, FAR_NEIGHBOUR);
-            addToCell(p.x - (p.y % 2 == 0 ? 2 : 1), p.y + 1, FAR_NEIGHBOUR);
-            addToCell(p.x - (p.y % 2 == 0 ? 2 : 1), p.y - 1, FAR_NEIGHBOUR);
-            addToCell(p.x - 2, p.y, FAR_NEIGHBOUR);
-            addToCell(p.x + 2, p.y, FAR_NEIGHBOUR);
+                addToCell(p.x, p.y + 2, FAR_NEIGHBOUR);
+                addToCell(p.x - 1, p.y + 2, FAR_NEIGHBOUR);
+                addToCell(p.x + 1, p.y + 2, FAR_NEIGHBOUR);
+                addToCell(p.x, p.y - 2, FAR_NEIGHBOUR);
+                addToCell(p.x - 1, p.y - 2, FAR_NEIGHBOUR);
+                addToCell(p.x + 1, p.y - 2, FAR_NEIGHBOUR);
+                addToCell(p.x + (p.y % 2 == 0 ? 1 : 2), p.y + 1, FAR_NEIGHBOUR);
+                addToCell(p.x + (p.y % 2 == 0 ? 1 : 2), p.y - 1, FAR_NEIGHBOUR);
+                addToCell(p.x - (p.y % 2 == 0 ? 2 : 1), p.y + 1, FAR_NEIGHBOUR);
+                addToCell(p.x - (p.y % 2 == 0 ? 2 : 1), p.y - 1, FAR_NEIGHBOUR);
+                addToCell(p.x - 2, p.y, FAR_NEIGHBOUR);
+                addToCell(p.x + 2, p.y, FAR_NEIGHBOUR);
+            }
         }
         ks = Cells.keySet().toArray(new Pair[0]);
 //        HashMap<Pair, Integer> newStep = new HashMap<>()
+
+        int newTime = (int) (SystemClock.uptimeMillis() - startTime);
+        Integer newState = newTime << 8; //pack 24 bits of millisecs into first 3 bytes of int
+        Log.d("hlg__", Integer.toBinaryString(newState));
+        Log.d("hlg  ", Long.toBinaryString(SystemClock.uptimeMillis() - startTime));
+        newState |= 1; //alive
         for (Pair p : ks) {
             val = Cells.get(p);
-            int closeNeighbours = (val>>1) & 7;
+            int closeNeighbours = (val >> 1) & 7;
             int farNeighbours = (val >> 4) & 15;
-            boolean alive = ((val & 1) ==1);
+            boolean alive = ((val & 1) == 1);
+            int cellTime = (val >> 8) & ((1 << 24) - 1);
 
-//            Integer newVal = 0;
-
-            if (closeNeighbours >= 2 && closeNeighbours <= 3 && alive
-                    ||closeNeighbours >= 2 && closeNeighbours <= 2 && !alive)
-                Cells.put(p, 1);
-            else
-                Cells.remove(p);
+            if (closeNeighbours >= 2 && closeNeighbours <= 3 && alive)
+                continue; //keep timer if staying alive
+            else if (closeNeighbours >= 2 && closeNeighbours <= 2 && !alive)
+                Cells.put(p, newState);
+            else if (alive) {
+                //if alive but is going to die
+                //reverse timer, so transition becomes 0.3->0.7, 0.9->0.1...
+                //2000ms length of transition, changing here change in shader too
+                int newCellState = (newTime - 2000 + Math.min(2000, Math.max(0, newTime - cellTime))) << 8;
+                Cells.put(p, newCellState);
+            } else
+                Cells.remove(p); //todo keep dying cells
         }
     }
 }

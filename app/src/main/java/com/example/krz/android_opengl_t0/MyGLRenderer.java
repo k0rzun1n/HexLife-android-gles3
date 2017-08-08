@@ -6,6 +6,7 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -106,7 +107,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mEye = new float[]{-6.0f, 0.0f, 12.0f};
         mEyeRotation = new float[]{0.0f, 60.0f};
         mQuad = new Quad(mContext);
-        mCyl = new Cylinder(mContext);
+        mCyl = new Cylinder(mContext, mHLG);
         GLES30.glClearColor(0.1f, 0f, 0f, 1f);
 //        hlg.step();
 

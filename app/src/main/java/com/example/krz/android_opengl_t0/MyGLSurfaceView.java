@@ -100,7 +100,7 @@ class MyGLSurfaceView extends GLSurfaceView {
                 Log.d("buttst", Long.toString(tt));
                 break;
             case MotionEvent.ACTION_UP:
-                if (System.currentTimeMillis() - tt < 100) {
+                if (System.currentTimeMillis() - tt < 150) {
                     queueEvent(new Runnable() {
                         @Override
                         public void run() {
