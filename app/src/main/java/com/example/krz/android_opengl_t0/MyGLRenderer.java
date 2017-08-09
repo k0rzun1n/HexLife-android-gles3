@@ -72,19 +72,24 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
     }
 
-    public void moveCamera(float dx, float dy) {
+    public void moveCamera(float dx, float dy, float dz) {
         double zRotRad = mEyeRotation[0] / 180 * Math.PI;
         double speed = 0.2;
         mEye[0] += speed * (-dx * Math.sin(zRotRad) - dy * Math.cos(zRotRad));
         mEye[1] += speed * (-dx * Math.cos(zRotRad) + dy * Math.sin(zRotRad));
+        mEye[2] += speed * dz;
 
         float cellRadius = 1.1f;
         float xc = cellRadius * (float) Math.sqrt(3.0);
         float yc = cellRadius * 1.5f;
-        boolean camMoved = false;
-        camGridY = (int) (mEye[1] / yc);
-        camGridX = (int) ((mEye[0] - (camGridY % 2) * 0.5f) / xc);
-        if (camMoved) mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
+
+        int newCamGridY = (int) (mEye[1] / yc);
+        int newCamGridX = (int) ((mEye[0] - (newCamGridY % 2) * 0.5f) / xc);
+        if (newCamGridX != camGridX || newCamGridY != camGridY){
+            mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
+            camGridY = newCamGridY;
+            camGridX = newCamGridX;
+        }
 //        Log.d("cam",Integer.toString(camGridX)+":"+Integer.toString(camGridY));
     }
 

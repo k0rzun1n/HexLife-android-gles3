@@ -18,11 +18,11 @@ class MyGLSurfaceView extends GLSurfaceView {
     private float mPreviousY;
 
 
-    public void moveCamera(final float dx, final float dy) {
+    public void moveCamera(final float dx, final float dy, final float dz) {
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                mRenderer.moveCamera(dx, dy);
+                mRenderer.moveCamera(dx, dy, dz);
             }
         });
     }
