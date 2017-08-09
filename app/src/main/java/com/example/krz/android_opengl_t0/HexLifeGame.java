@@ -36,7 +36,7 @@ public class HexLifeGame {
         for (int i = 0; i < radius; i++) {
             int row = cy + radius - i;
             int row2 = cy - radius + i;
-            int colStart = cx - (radius + sty % 2) / 2 - (i + even) / 2; //can this be shorter?
+            int colStart = cx - (radius + Math.abs(sty % 2)) / 2 - (i + even) / 2; //can this be shorter?
             for (int j = 0; j < radius + i + 1; j++) {
                 int col = colStart + j;
                 p.x = col;

@@ -38,9 +38,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     private HexLifeGame mHLG;
 
     int[] rendTex;
-    private int camGridX;
-    private int camGridY;
-    private int renderRadius = 7;
+    private int camGridX = 0;
+    private int camGridY = 0;
+    private int renderRadius = 10;
 
     public MyGLRenderer(Context context) {
         super();
@@ -52,8 +52,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //add nullchecks
         mHLG.step();
         mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
-//        mCyl.setInst(mHLG.getField(0, 0, 7));
-//        GLES30.glClearColor(0,1f,0,1f);
     }
 
     public void switchCellAtPixel(final int x, final int y) {
@@ -68,7 +66,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         mHLG.switchCell(ret.get(0), ret.get(1));
         ret.clear();
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0);
-//        mCyl.setInst(mHLG.getField(0, 0, 7));
         mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
     }
 
@@ -85,10 +82,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         int newCamGridY = (int) (mEye[1] / yc);
         int newCamGridX = (int) ((mEye[0] - (newCamGridY % 2) * 0.5f) / xc);
-        if (newCamGridX != camGridX || newCamGridY != camGridY){
-            mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
+        if (newCamGridX != camGridX || newCamGridY != camGridY) {
             camGridY = newCamGridY;
             camGridX = newCamGridX;
+            mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
         }
 //        Log.d("cam",Integer.toString(camGridX)+":"+Integer.toString(camGridY));
     }
@@ -168,7 +165,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 //        Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
 
-        mCyl.setInst(mHLG.getField(0, 1, 3));
+        mCyl.setInst(mHLG.getField(camGridX, camGridY, renderRadius));
     }
 
     public void onDrawFrame(GL10 gl) {
